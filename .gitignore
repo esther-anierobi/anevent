@@ -1,0 +1,19 @@
+# --- App Logs and Debugging ---
+*.log
+
+# --- Environmental Variables ---
+.env
+
+# --- Virtual Environment ---
+/.venv/
+
+# --- Alembic Migrations files---
+alembic/versions/*.pyc
+alembic/__pycache__/
+
+# --- PyCharm IDE ---
+.idea/
+
+# Python cache files
+__pycache__/
+
