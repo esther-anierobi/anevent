@@ -1,5 +1,6 @@
 
 from datetime import datetime, timedelta
+from typing import List
 from uuid import uuid4
 
 from fastapi import HTTPException
@@ -8,7 +9,7 @@ from sqlalchemy.orm import Session
 
 from app.auth.auth import get_password_hash, verify_password
 from app.models.users import User
-from app.schemas.users import UserCreate, VerifyOTP
+from app.schemas.users import UserCreate, VerifyOTP, UpdateUser
 from app.utils.otp import generate_otp
 
 
@@ -26,7 +27,7 @@ class UserService:
         otp_expiry = datetime.now() + timedelta(minutes=10)
 
         #create user object
-        user_dict = user_data.model_dump()
+        user_dict = user_data.model_dump(exclude_none=True)
         user_dict['email'] = user_dict['email'].lower()
         user_dict['password'] = get_password_hash(user_dict['password'])
         user_id = str(uuid4())
@@ -59,6 +60,7 @@ class UserService:
         user.is_active = True
         user.verification_otp = None
         user.otp_expiry = None
+        user.is_verified = True
 
         db.commit()
         return user
@@ -76,6 +78,12 @@ class UserService:
         return user
 
     @staticmethod
+    def get_users(db: Session, skip: int = 0, limit: int = 100):
+        """Get all users"""
+        users = db.query(User).offset(skip).limit(limit).all()
+        return users
+
+    @staticmethod
     def get_user_by_id(
             db: Session,
             user_id:str
@@ -87,3 +95,32 @@ class UserService:
             raise HTTPException(status_code=400, detail="User with the id does not exist")
 
         return user
+
+    @staticmethod
+    def update_user(user_id: str, db:Session, user_data: UpdateUser):
+        # Query database to check if user exists
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=400, detail="User with the id does not exist")
+
+        user_data = user_data.model_dump(exclude_unset=True)
+        for attr, value in user_data.items():
+            setattr(user, attr, value)
+
+        db.commit()
+        db.refresh(user)
+
+        return user
+
+    @staticmethod
+    def delete_user(user_id: str, db:Session):
+        """Delete a user"""
+        user = db.query(User).filter(User.id == user_id).first()
+        if not user:
+            raise HTTPException(status_code=400, detail="User with the id does not exist")
+
+        # Delete the user
+        db.delete(user)
+        db.commit()
+
+        return {f"User with id {user_id} has been deleted"}

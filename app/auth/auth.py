@@ -47,7 +47,7 @@ def create_access_token(data: dict, expires_delta: timedelta = None):
     # set the token creation time
     to_encode.update({"iat": datetime.now().timestamp()})
     # set the last activity time to time of creation
-    to_encode.update({"last activity": datetime.now().timestamp()})
+    to_encode.update({"last_activity": datetime.now().timestamp()})
     # set expiring time for long term token
     expire = datetime.now() + (expires_delta or timedelta(hours=ACCESS_TOKEN_EXPIRE_HOURS))
     to_encode.update({"exp": expire})
@@ -64,10 +64,10 @@ def update_token_activity(token: str) -> str:
     """Update token last activity timestamp and return a new token string"""
     try:
         # Manually decode the token without verifying the expiration.
-        token_data = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_expiry": False})
+        token_data = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM], options={"verify_exp": False})
 
         # Check if the token has expired based on the expiration field
-        if datetime.fromtimestamp(token_data.get("exp")) > datetime.now():
+        if datetime.fromtimestamp(token_data.get("exp")) < datetime.now():
             return None
 
         # Check if the token is timeout due to inactivity

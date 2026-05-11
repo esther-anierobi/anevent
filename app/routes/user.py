@@ -1,12 +1,15 @@
 from datetime import datetime
+from typing import List
+
 from fastapi import Depends, APIRouter, Request, Response, HTTPException
 from fastapi.security import OAuth2PasswordRequestForm
 from sqlalchemy.orm import Session
 
 from app.auth.auth import create_access_token
 from app.auth.dependency import get_current_user
+from app.models.enums import UserType
 from app.models.users import User
-from app.schemas.users import UserCreate, UserResponse, VerifyOTP, LoginResponse, LoginUser
+from app.schemas.users import UserCreate, UserResponse, VerifyOTP, LoginResponse, LoginUser, UpdateUser
 from app.services.users import UserService
 from app.database import get_db
 
@@ -51,9 +54,46 @@ def login_user(response: Response, login_data: LoginUser, db: Session = Depends(
         "user": UserResponse.model_validate(user)
     }
 
+@router.get("/users", response_model=List[UserResponse])
+def get_users(
+        db: Session = Depends(get_db),
+        skip: int = 0, limit: int = 100,
+        current_user: User = Depends(get_current_user)
+):
+    """Get all users"""
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(status_code=403, detail="Unauthorised! Only Admin users can get total users")
+
+    return UserService.get_users(db, skip, limit)
 
 @router.get("/user/{user_id}", response_model=UserResponse)
 def get_user_by_id(user_id: str, current_user: User = Depends(get_current_user), db: Session = Depends(get_db)):
-    if not current_user.id == user_id:
-        raise HTTPException(status_code=403, detail="Not Authorized")
     return UserService.get_user_by_id(db, user_id)
+
+@router.put("/user/{user_id}", response_model=UserResponse)
+def update_user(
+        user_id: str,
+        user_data: UpdateUser,
+        db: Session = Depends(get_db),
+        current_user: User = Depends(get_current_user)
+):
+    """Update an existing user in the database"""
+    # Only user or admin are authorized
+    if current_user.id != user_id and current_user.user_type != UserType.ADMIN :
+        raise HTTPException(status_code=403, detail=f"Only Admin users or user with this id {user_id} can update users")
+
+    return UserService.update_user( user_id, db, user_data)
+
+@router.delete("/user/{user_id}")
+def delete_user(user_id: str, db: Session = Depends(get_db), current_user: User = Depends(get_current_user)):
+    """Delete an existing user in the database"""
+    # Only Admin users can delete
+    if current_user.user_type != UserType.ADMIN:
+        raise HTTPException(status_code=403, detail="Only Admin users can delete users")
+
+    # Check if the user to be deleted exists
+    user = db.query(User).filter(User.id == user_id).first()
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+
+    return UserService.delete_user(user_id, db)
