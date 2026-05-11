@@ -1,7 +1,7 @@
 from datetime import datetime
 from typing import Optional
 
-from pydantic import BaseModel, EmailStr
+from pydantic import BaseModel, EmailStr, ConfigDict
 
 from app.models.enums import UserType
 
@@ -39,9 +39,9 @@ class UserResponse(BaseModel):
     created_at: datetime
     updated_at: datetime
 
-    model_config = {
-        "from_attributes": True
-    }
+    model_config = ConfigDict(
+        from_attributes = True
+    )
 
 
 class VerifyOTP(BaseModel):
@@ -57,3 +57,13 @@ class LoginResponse(BaseModel):
     access_token: str
     token_type: str
     user: UserResponse
+
+
+class UpdateUser(BaseModel):
+    name: Optional[str] = None
+    email:Optional[str] = None
+    phone: Optional[str]
+    is_active: Optional[bool] = False
+    address: Optional[str] = None
+    city: Optional[str] = None
+    country: Optional[str] = None

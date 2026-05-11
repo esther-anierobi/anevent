@@ -1,9 +1,9 @@
 # Anievent API
 
 ![Python](https://img.shields.io/badge/Python-3.13-blue.svg)
-![FastAPI](https://img.shields.io/badge/FastAPI-0.104-red.svg)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.136.1-red.svg)
 ![SQLAlchemy](https://img.shields.io/badge/SQLAlchemy-2.0-green.svg)
-![Pydantic Schema](https://img.shields.io/badge/Pydantic-2.12.5-purple.svg)
+![Pydantic Schema](https://img.shields.io/badge/Pydantic-2.13.4-purple.svg)
 ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-Latest-orange.svg)
 
 Anevent is a REST API for an event management app.
@@ -43,6 +43,8 @@ Anevent API
 │
 └── README.md
 ```
+## Project Swagger(UI) Overview
+
 
 ##  Features
 

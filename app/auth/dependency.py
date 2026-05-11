@@ -35,8 +35,9 @@ def get_current_user(
 
         # Verify token inactivity timeout
         last_activity = token_data.get("last_activity")
-        if last_activity:
-            last_activity = datetime.fromisoformat(last_activity)
+        if last_activity is not None:
+            last_activity = float(last_activity)
+            last_activity = datetime.fromtimestamp(last_activity)
             if last_activity + timedelta(minutes=INACTIVITY_TIMEOUT_MINUTES) < datetime.now():
                 raise HTTPException(
                     status_code=status.HTTP_403_FORBIDDEN,
